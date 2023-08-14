@@ -2,3 +2,4 @@ build/
 venv/
 meta.json
 dist/
+.idea/
