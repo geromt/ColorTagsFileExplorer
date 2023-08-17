@@ -7,7 +7,9 @@ import sys
 
 from PyQt5.QtCore import Qt, QItemSelectionModel
 from PyQt5.QtGui import QColor, QContextMenuEvent
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QListView, QStyledItemDelegate
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QListView, QStyledItemDelegate, QDialog
+from PyQt5.uic import loadUi
+
 from main_window_ui import Ui_MainWindow
 
 META_FILE = "meta.json"
@@ -36,6 +38,9 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
 
     def init_ui(self):
         self.file_model.setRootPath(self.current_path)
+
+        self.actionNew_File.triggered.connect(self.open_new_file_dialog)
+        self.actionNew_Folder_2.triggered.connect(self.open_new_folder_dialog)
 
         self.folderUpButton.clicked.connect(self.go_folder_up)
 
@@ -85,6 +90,27 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
     def go_folder_up(self):
         self.current_path = os.path.dirname(self.current_path)
         self.listView.setRootIndex(self.file_model.index(self.current_path))
+
+    def open_new_file_dialog(self):
+        dialog = NewFileDialog(self)
+        dialog.buttonBox.accepted.connect(lambda: self.create_new_file(dialog.fileNameLineEdit.text()))
+        dialog.exec()
+
+    def open_new_folder_dialog(self):
+        dialog = NewFolderDialog(self)
+        dialog.buttonBox.accepted.connect(lambda: self.create_new_folder(dialog.fileNameLineEdit.text()))
+        dialog.exec()
+
+    def create_new_file(self, file_name):
+        root, ext = os.path.splitext(file_name)
+        new_path = os.path.join(self.current_path, file_name) if ext else os.path.join(self.current_path, f"{file_name}.txt")
+
+        with open(new_path, "w") as f:
+            f.write("")
+
+    def create_new_folder(self, folder_name):
+        new_path = os.path.join(self.current_path, folder_name)
+        os.mkdir(new_path)
 
 
 class ColorDelegate(QStyledItemDelegate):
@@ -141,6 +167,18 @@ class ColorDelegate(QStyledItemDelegate):
             self.update_index_value(index)
             return True
         return False
+
+
+class NewFileDialog(QDialog):
+    def __init__(self, current_path, parent=None):
+        super().__init__(parent)
+        loadUi("ui/new-file.ui", self)
+
+
+class NewFolderDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        loadUi("ui/new-folder.ui", self)
 
 
 def main():

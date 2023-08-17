@@ -58,7 +58,7 @@
      <property name="title">
       <string>New...</string>
      </property>
-     <addaction name="actionNew_File_2"/>
+     <addaction name="actionNew_File"/>
      <addaction name="actionNew_Folder_2"/>
     </widget>
     <addaction name="menuNew"/>
@@ -118,15 +118,17 @@
   </action>
   <action name="actionEdit_tag">
    <property name="icon">
-    <iconset theme="edit"/>
+    <iconset theme="edit">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Edit tag</string>
    </property>
   </action>
-  <action name="actionNew_File_2">
+  <action name="actionNew_File">
    <property name="icon">
-    <iconset theme="document-new"/>
+    <iconset theme="document-new">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>New File</string>
@@ -137,7 +139,8 @@
   </action>
   <action name="actionNew_Folder_2">
    <property name="icon">
-    <iconset theme="folder-new"/>
+    <iconset theme="folder-new">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>New Folder</string>
@@ -145,7 +148,8 @@
   </action>
   <action name="actionCut">
    <property name="icon">
-    <iconset theme="edit-cut"/>
+    <iconset theme="edit-cut">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Cut</string>
@@ -156,7 +160,8 @@
   </action>
   <action name="actionCopy">
    <property name="icon">
-    <iconset theme="edit-copy"/>
+    <iconset theme="edit-copy">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Copy</string>
@@ -167,7 +172,8 @@
   </action>
   <action name="actionPaste">
    <property name="icon">
-    <iconset theme="edit-paste"/>
+    <iconset theme="edit-paste">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Paste</string>
@@ -178,7 +184,8 @@
   </action>
   <action name="actionDelete">
    <property name="icon">
-    <iconset theme="edit-delete"/>
+    <iconset theme="edit-delete">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Delete</string>
@@ -189,7 +196,8 @@
   </action>
   <action name="actionSelect_All">
    <property name="icon">
-    <iconset theme="edit-select-all"/>
+    <iconset theme="edit-select-all">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Select All</string>
