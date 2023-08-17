@@ -49,6 +49,7 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
         self.actionCopy.triggered.connect(self.copy_items)
         self.actionCut.triggered.connect(self.cut_items)
         self.actionPaste.triggered.connect(self.paste_items)
+        self.actionDelete.triggered.connect(self.delete_items)
         self.actionSelect_All.triggered.connect(self.listView.selectAll)
 
         self.folderUpButton.clicked.connect(self.go_folder_up)
@@ -140,6 +141,14 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
                     shutil.copy(path, self.current_path)
 
         self.clipboard_items = []
+
+    def delete_items(self):
+        for item in self.listView.selectedIndexes():
+            new_path = os.path.join(self.current_path, item.data())
+            if os.path.isfile(new_path):
+                os.remove(new_path)
+            elif os.path.isdir(new_path):
+                os.removedirs(new_path)
 
 
 class ColorDelegate(QStyledItemDelegate):
