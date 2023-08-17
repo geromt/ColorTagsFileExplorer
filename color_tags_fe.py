@@ -10,22 +10,21 @@ from PyQt5.QtGui import QColor, QContextMenuEvent
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QListView, QStyledItemDelegate
 from main_window_ui import Ui_MainWindow
 
-current_path = ""
-file_states = {}
+META_FILE = "meta.json"
 
 
 class FileExplorerApp(QMainWindow, Ui_MainWindow):
     def __init__(self):
-        global file_states
-        global current_path
         super().__init__()
         self.setupUi(self)
 
-        current_path = os.path.expanduser("~")
-        print(current_path)
-        if os.path.exists("meta.json"):
-            with open("meta.json", "r") as f:
-                file_states = json.loads(f.read())
+        self.current_path = os.path.expanduser("~")  # Get the user's home path on Linux/Windows
+        print(self.current_path)
+
+        self.file_states = {}
+        if os.path.exists(META_FILE):
+            with open(META_FILE, "r") as f:
+                self.file_states = json.loads(f.read())
 
         self.setWindowTitle("Color Tag File Explorer")
         self.setGeometry(100, 100, 800, 600)
@@ -36,12 +35,12 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
         self.init_ui()
 
     def init_ui(self):
-        self.file_model.setRootPath(current_path)
+        self.file_model.setRootPath(self.current_path)
 
         self.folderUpButton.clicked.connect(self.go_folder_up)
 
         self.listView.setModel(self.file_model)
-        self.listView.setRootIndex(self.file_model.index(current_path))
+        self.listView.setRootIndex(self.file_model.index(self.current_path))
         self.listView.doubleClicked.connect(self.open_file)
 
         self.listView.setDragEnabled(True)
@@ -52,26 +51,28 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
 
         self.listView.setSelectionModel(self.list_selection_model)
 
-        delegate = ColorDelegate(self.list_selection_model, self.file_model, self.listView)
+        delegate = ColorDelegate(self.list_selection_model,
+                                 self.file_model,
+                                 self.listView,
+                                 self.current_path,
+                                 self.file_states)
         self.listView.setItemDelegate(delegate)
 
     def closeEvent(self, event):
         print("Close button or Alt+F4 was pressed.")
-        # Perform any cleanup or additional actions here before closing
-        with open("meta.json", "w") as f:
-            json.dump(file_states, f)
 
-        event.accept()  # Accept the close event
+        with open(META_FILE, "w") as f:
+            json.dump(self.file_states, f, indent=2)
+
+        event.accept()
 
     def open_file(self, index):
-        print("Double Clicked opening file")
-        global current_path
+        print(f"Opening file: {index.data()}")
 
         item_text = index.data()
-        new_path = os.path.join(current_path, item_text)
+        new_path = os.path.join(self.current_path, item_text)
 
         if os.path.isfile(new_path):
-            print('Opening: ' + new_path)
             if sys.platform == "win32":
                 os.startfile(new_path)
             else:
@@ -79,20 +80,22 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
                 subprocess.call([opener, new_path])
         else:
             self.listView.setRootIndex(self.file_model.index(new_path))
-            current_path = new_path
+            self.current_path = new_path
 
     def go_folder_up(self):
-        global current_path
-        current_path = os.path.dirname(current_path)
-        self.listView.setRootIndex(self.file_model.index(current_path))
+        self.current_path = os.path.dirname(self.current_path)
+        self.listView.setRootIndex(self.file_model.index(self.current_path))
 
 
 class ColorDelegate(QStyledItemDelegate):
-    def __init__(self, selection_model, model, view, parent=None):
+    def __init__(self, selection_model, model, view, current_path, file_states, parent=None):
         super().__init__(parent)
         self.selection_model = selection_model
         self.model = model
         self.view = view
+        self.current_path = current_path
+        self.file_states = file_states
+
         self.special_item_index = None
         self.normal_color = QColor(Qt.white)
         self.special_color = QColor(Qt.yellow)  # Change this to the desired color
@@ -102,16 +105,15 @@ class ColorDelegate(QStyledItemDelegate):
         self.special_item_index = index
 
     def paint(self, painter, option, index):
-        full_path = os.path.join(current_path, index.data())
-        print("Full path: " + full_path)
+        full_path = os.path.join(self.current_path, index.data())
 
-        if full_path in file_states:
+        if full_path in self.file_states:
             painter.save()
-            if file_states[full_path] == 1:
+            if self.file_states[full_path] == 1:
                 painter.fillRect(option.rect, self.special_color)
-            elif file_states[full_path] == 2:
+            elif self.file_states[full_path] == 2:
                 painter.fillRect(option.rect, self.special_color2)
-            elif file_states[full_path] == 0:
+            elif self.file_states[full_path] == 0:
                 painter.fillRect(option.rect, self.normal_color)
             painter.restore()
 
@@ -123,18 +125,18 @@ class ColorDelegate(QStyledItemDelegate):
             painter.restore()
 
     def createEditor(self, parent, option, index):
-        return None  # Disable editing
+        return None
 
     def update_index_value(self, index):
-        full_path = os.path.join(current_path, index.data())
-        if full_path not in file_states:
-            file_states[full_path] = 1
+        full_path = os.path.join(self.current_path, index.data())
+        if full_path not in self.file_states:
+            self.file_states[full_path] = 1
         else:
-            file_states[full_path] = (file_states[full_path] + 1) % 3
+            self.file_states[full_path] = (self.file_states[full_path] + 1) % 3
 
     def editorEvent(self, event, model, option, index):
         if event.type() == QContextMenuEvent.MouseButtonRelease and event.button() == Qt.RightButton:
-            self.special_item_index = index
+            self.set_special_item(index)
             self.selection_model.clearSelection()
             self.update_index_value(index)
             return True
