@@ -2,6 +2,7 @@
 
 import json
 import os.path
+import shutil
 import subprocess
 import sys
 
@@ -34,6 +35,9 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
         self.file_model = QFileSystemModel()
         self.list_selection_model = QItemSelectionModel(self.file_model)
 
+        self.clipboard_items = []
+        self.was_cut_selected = False
+
         self.init_ui()
 
     def init_ui(self):
@@ -41,6 +45,11 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
 
         self.actionNew_File.triggered.connect(self.open_new_file_dialog)
         self.actionNew_Folder_2.triggered.connect(self.open_new_folder_dialog)
+
+        self.actionCopy.triggered.connect(self.copy_items)
+        self.actionCut.triggered.connect(self.cut_items)
+        self.actionPaste.triggered.connect(self.paste_items)
+        self.actionSelect_All.triggered.connect(self.listView.selectAll)
 
         self.folderUpButton.clicked.connect(self.go_folder_up)
 
@@ -111,6 +120,26 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
     def create_new_folder(self, folder_name):
         new_path = os.path.join(self.current_path, folder_name)
         os.mkdir(new_path)
+
+    def copy_items(self):
+        self.clipboard_items = [os.path.join(self.current_path, index.data()) for index in self.listView.selectedIndexes()]
+
+    def cut_items(self):
+        self.copy_items()
+        self.was_cut_selected = True
+
+    def paste_items(self):
+        if self.was_cut_selected:
+            for path in self.clipboard_items:
+                shutil.move(path, self.current_path)
+            self.was_cut_selected = False
+        else:
+            for path in self.clipboard_items:
+                # Only copies files
+                if os.path.isfile(path):
+                    shutil.copy(path, self.current_path)
+
+        self.clipboard_items = []
 
 
 class ColorDelegate(QStyledItemDelegate):
