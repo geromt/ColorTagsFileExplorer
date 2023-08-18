@@ -7,8 +7,9 @@ import subprocess
 import sys
 
 from PyQt5.QtCore import Qt, QItemSelectionModel
-from PyQt5.QtGui import QColor, QContextMenuEvent
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QListView, QStyledItemDelegate, QDialog
+from PyQt5.QtGui import QColor, QContextMenuEvent, QPalette
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QListView, QStyledItemDelegate, QDialog, \
+    QColorDialog
 from PyQt5.uic import loadUi
 
 from main_window_ui import Ui_MainWindow
@@ -51,6 +52,8 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
         self.actionPaste.triggered.connect(self.paste_items)
         self.actionDelete.triggered.connect(self.delete_items)
         self.actionSelect_All.triggered.connect(self.listView.selectAll)
+
+        self.actionAdd_new_tag.triggered.connect(self.open_new_color_tag_dialog)
 
         self.folderUpButton.clicked.connect(self.go_folder_up)
 
@@ -150,6 +153,10 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
             elif os.path.isdir(new_path):
                 os.removedirs(new_path)
 
+    def open_new_color_tag_dialog(self):
+        dialog = NewColorTagDialog(self)
+        dialog.exec()
+
 
 class ColorDelegate(QStyledItemDelegate):
     def __init__(self, selection_model, model, view, current_path, file_states, parent=None):
@@ -217,6 +224,27 @@ class NewFolderDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         loadUi("ui/new-folder.ui", self)
+
+
+class NewColorTagDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        loadUi("ui/new-color-tag.ui", self)
+
+        self.BaseColorButton.clicked.connect(self.base_color_picker)
+        self.FontColorButton.clicked.connect(self.font_color_picker)
+
+    def base_color_picker(self):
+        color = QColorDialog.getColor()
+        new_palette = self.exampleColors.palette()
+        new_palette.setColor(QPalette.Base, color)
+        self.exampleColors.setPalette(new_palette)
+
+    def font_color_picker(self):
+        color = QColorDialog.getColor()
+        new_palette = self.exampleColors.palette()
+        new_palette.setColor(QPalette.Text, color)
+        self.exampleColors.setPalette(new_palette)
 
 
 def main():
