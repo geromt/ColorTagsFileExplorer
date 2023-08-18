@@ -39,6 +39,11 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
         self.clipboard_items = []
         self.was_cut_selected = False
 
+        self.color_tags = {0: ("normal tag", QColor(Qt.white), QColor(Qt.black)),
+                           1: ("special tag", QColor(Qt.yellow), QColor(Qt.black)),
+                           2: ("urgent tag", QColor(Qt.red), QColor(Qt.white))
+                           }
+
         self.init_ui()
 
     def init_ui(self):
@@ -73,7 +78,8 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
                                  self.file_model,
                                  self.listView,
                                  self.current_path,
-                                 self.file_states)
+                                 self.file_states,
+                                 self.color_tags)
         self.listView.setItemDelegate(delegate)
 
     def closeEvent(self, event):
@@ -154,23 +160,21 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
                 os.removedirs(new_path)
 
     def open_new_color_tag_dialog(self):
-        dialog = NewColorTagDialog(self)
+        dialog = NewColorTagDialog(self.color_tags, self)
         dialog.exec()
 
 
 class ColorDelegate(QStyledItemDelegate):
-    def __init__(self, selection_model, model, view, current_path, file_states, parent=None):
+    def __init__(self, selection_model, model, view, current_path, file_states, color_tags, parent=None):
         super().__init__(parent)
         self.selection_model = selection_model
         self.model = model
         self.view = view
         self.current_path = current_path
         self.file_states = file_states
+        self.color_tags = color_tags
 
         self.special_item_index = None
-        self.normal_color = QColor(Qt.white)
-        self.special_color = QColor(Qt.yellow)  # Change this to the desired color
-        self.special_color2 = QColor(Qt.red)
 
     def set_special_item(self, index):
         self.special_item_index = index
@@ -180,19 +184,15 @@ class ColorDelegate(QStyledItemDelegate):
 
         if full_path in self.file_states:
             painter.save()
-            if self.file_states[full_path] == 1:
-                painter.fillRect(option.rect, self.special_color)
-            elif self.file_states[full_path] == 2:
-                painter.fillRect(option.rect, self.special_color2)
-            elif self.file_states[full_path] == 0:
-                painter.fillRect(option.rect, self.normal_color)
+            painter.fillRect(option.rect, self.color_tags[self.file_states[full_path]][1])
+            painter.setPen(self.color_tags[self.file_states[full_path]][2])
+
             painter.restore()
 
         super().paint(painter, option, index)
 
         if index == self.special_item_index:
             painter.save()
-            painter.setPen(Qt.black)
             painter.restore()
 
     def createEditor(self, parent, option, index):
@@ -203,7 +203,7 @@ class ColorDelegate(QStyledItemDelegate):
         if full_path not in self.file_states:
             self.file_states[full_path] = 1
         else:
-            self.file_states[full_path] = (self.file_states[full_path] + 1) % 3
+            self.file_states[full_path] = (self.file_states[full_path] + 1) % len(self.color_tags)
 
     def editorEvent(self, event, model, option, index):
         if event.type() == QContextMenuEvent.MouseButtonRelease and event.button() == Qt.RightButton:
@@ -227,12 +227,16 @@ class NewFolderDialog(QDialog):
 
 
 class NewColorTagDialog(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, color_tags, parent=None):
         super().__init__(parent)
         loadUi("ui/new-color-tag.ui", self)
 
+        self.color_tags = color_tags
+
         self.BaseColorButton.clicked.connect(self.base_color_picker)
         self.FontColorButton.clicked.connect(self.font_color_picker)
+
+        self.buttonBox.accepted.connect(self.create_color_tag)
 
     def base_color_picker(self):
         color = QColorDialog.getColor()
@@ -245,6 +249,12 @@ class NewColorTagDialog(QDialog):
         new_palette = self.exampleColors.palette()
         new_palette.setColor(QPalette.Text, color)
         self.exampleColors.setPalette(new_palette)
+
+    def create_color_tag(self):
+        palette = self.exampleColors.palette()
+        self.color_tags[len(self.color_tags)] = (self.tagNameLineEdit.text(),
+                                                 palette.color(QPalette.Base),
+                                                 palette.color(QPalette.Text))
 
 
 def main():
