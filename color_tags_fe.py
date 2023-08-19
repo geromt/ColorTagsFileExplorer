@@ -7,12 +7,11 @@ import subprocess
 import sys
 
 from PyQt5.QtCore import Qt, QItemSelectionModel
-from PyQt5.QtGui import QColor, QContextMenuEvent, QPalette
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QListView, QStyledItemDelegate, QDialog, \
-    QColorDialog
-from PyQt5.uic import loadUi
+from PyQt5.QtGui import QColor, QContextMenuEvent
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QListView, QStyledItemDelegate
 
 from main_window_ui import Ui_MainWindow
+from dialogs import *
 
 META_FILE = "meta.json"
 
@@ -121,25 +120,12 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
         self.listView.setRootIndex(self.file_model.index(self.current_path))
 
     def open_new_file_dialog(self):
-        dialog = NewFileDialog(self)
-        dialog.buttonBox.accepted.connect(lambda: self.create_new_file(dialog.fileNameLineEdit.text()))
+        dialog = NewFileDialog(self.current_path, self)
         dialog.exec()
 
     def open_new_folder_dialog(self):
-        dialog = NewFolderDialog(self)
-        dialog.buttonBox.accepted.connect(lambda: self.create_new_folder(dialog.fileNameLineEdit.text()))
+        dialog = NewFolderDialog(self.current_path, self)
         dialog.exec()
-
-    def create_new_file(self, file_name):
-        root, ext = os.path.splitext(file_name)
-        new_path = os.path.join(self.current_path, file_name) if ext else os.path.join(self.current_path, f"{file_name}.txt")
-
-        with open(new_path, "w") as f:
-            f.write("")
-
-    def create_new_folder(self, folder_name):
-        new_path = os.path.join(self.current_path, folder_name)
-        os.mkdir(new_path)
 
     def copy_items(self):
         self.clipboard_items = [os.path.join(self.current_path, index.data()) for index in self.listView.selectedIndexes()]
@@ -222,49 +208,6 @@ class ColorDelegate(QStyledItemDelegate):
             self.update_index_value(index)
             return True
         return False
-
-
-class NewFileDialog(QDialog):
-    def __init__(self, current_path, parent=None):
-        super().__init__(parent)
-        loadUi("ui/new-file.ui", self)
-
-
-class NewFolderDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        loadUi("ui/new-folder.ui", self)
-
-
-class NewColorTagDialog(QDialog):
-    def __init__(self, color_tags, parent=None):
-        super().__init__(parent)
-        loadUi("ui/new-color-tag.ui", self)
-
-        self.color_tags = color_tags
-
-        self.BaseColorButton.clicked.connect(self.base_color_picker)
-        self.FontColorButton.clicked.connect(self.font_color_picker)
-
-        self.buttonBox.accepted.connect(self.create_color_tag)
-
-    def base_color_picker(self):
-        color = QColorDialog.getColor()
-        new_palette = self.exampleColors.palette()
-        new_palette.setColor(QPalette.Base, color)
-        self.exampleColors.setPalette(new_palette)
-
-    def font_color_picker(self):
-        color = QColorDialog.getColor()
-        new_palette = self.exampleColors.palette()
-        new_palette.setColor(QPalette.Text, color)
-        self.exampleColors.setPalette(new_palette)
-
-    def create_color_tag(self):
-        palette = self.exampleColors.palette()
-        self.color_tags[len(self.color_tags)] = (self.tagNameLineEdit.text(),
-                                                 palette.color(QPalette.Base),
-                                                 palette.color(QPalette.Text))
 
 
 def main():
