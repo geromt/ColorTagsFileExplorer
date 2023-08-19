@@ -63,6 +63,7 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
         self.actionSelect_All.triggered.connect(self.listView.selectAll)
 
         self.actionAdd_new_tag.triggered.connect(self.open_new_color_tag_dialog)
+        self.actionEdit_tag.triggered.connect(self.open_edit_tags_dialog)
 
         self.folderUpButton.clicked.connect(self.go_folder_up)
 
@@ -160,6 +161,10 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
         dialog = NewColorTagDialog(self.color_tags, self)
         dialog.exec()
 
+    def open_edit_tags_dialog(self):
+        dialog = EditTagsDialog(self.color_tags, self)
+        dialog.exec()
+
 
 class ColorDelegate(QStyledItemDelegate):
     def __init__(self, selection_model, model, view, current_path, file_states, color_tags, parent=None):
@@ -180,9 +185,6 @@ class ColorDelegate(QStyledItemDelegate):
         full_path = os.path.join(self.current_path["path"], index.data())
 
         if full_path in self.file_states:
-            print(self.current_path["path"])
-            print(index.data())
-            print(full_path)
             painter.save()
             painter.fillRect(option.rect, self.color_tags[self.file_states[full_path]][1])
             painter.setPen(self.color_tags[self.file_states[full_path]][2])

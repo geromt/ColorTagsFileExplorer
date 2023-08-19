@@ -4,6 +4,8 @@ from PyQt5.QtGui import QPalette
 from PyQt5.QtWidgets import QDialog, QColorDialog
 from PyQt5.uic import loadUi
 
+from edit_tags_ui import Ui_EditTagsDialog
+
 
 class NewFileDialog(QDialog):
     def __init__(self, current_path, parent=None):
@@ -64,3 +66,11 @@ class NewColorTagDialog(QDialog):
         self.color_tags[len(self.color_tags)] = (self.tagNameLineEdit.text(),
                                                  palette.color(QPalette.Base),
                                                  palette.color(QPalette.Text))
+
+
+class EditTagsDialog(QDialog, Ui_EditTagsDialog):
+    def __init__(self, color_tags, parent=None):
+        super().__init__(parent)
+        self.setupUi(self)
+
+        self.color_tags = color_tags
