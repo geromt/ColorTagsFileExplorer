@@ -6,7 +6,7 @@ import shutil
 import subprocess
 import sys
 
-from PyQt5.QtCore import Qt, QItemSelectionModel
+from PyQt5.QtCore import Qt, QItemSelectionModel, QRect
 from PyQt5.QtGui import QColor, QContextMenuEvent
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QListView, QStyledItemDelegate
 
@@ -183,13 +183,16 @@ class ColorDelegate(QStyledItemDelegate):
             painter.fillRect(option.rect, self.color_tags[self.file_states[full_path]][1])
             painter.setPen(self.color_tags[self.file_states[full_path]][2])
 
-            painter.restore()
+            icon = self.model.fileIcon(index)
+            rect_width_minus_icon = option.rect.width() - icon.actualSize(option.rect.size()).width()
+            icon_rect = option.rect.adjusted(0, 0, -rect_width_minus_icon, 0)
+            icon.paint(painter, icon_rect)
 
-        super().paint(painter, option, index)
-
-        if index == self.special_item_index:
-            painter.save()
+            text_rect = option.rect.adjusted(icon.actualSize(option.rect.size()).width() + 5, 0, 0, 0)
+            painter.drawText(text_rect, Qt.AlignLeft | Qt.AlignVCenter, index.data(Qt.DisplayRole))
             painter.restore()
+        else:
+            super().paint(painter, option, index)
 
     def createEditor(self, parent, option, index):
         return None
