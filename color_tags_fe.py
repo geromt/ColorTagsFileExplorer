@@ -21,8 +21,9 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
 
-        self.current_path = os.path.expanduser("~")  # Get the user's home path on Linux/Windows
-        print(self.current_path)
+        # It's a dictionary so that we can modify its value and all the classes can see the current value
+        self.current_path = {"path": os.path.expanduser("~")}
+        print(self.current_path["path"])
 
         self.file_states = {}
         self.color_tags = {}
@@ -50,7 +51,7 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
         self.init_ui()
 
     def init_ui(self):
-        self.file_model.setRootPath(self.current_path)
+        self.file_model.setRootPath(self.current_path["path"])
 
         self.actionNew_File.triggered.connect(self.open_new_file_dialog)
         self.actionNew_Folder_2.triggered.connect(self.open_new_folder_dialog)
@@ -66,7 +67,7 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
         self.folderUpButton.clicked.connect(self.go_folder_up)
 
         self.listView.setModel(self.file_model)
-        self.listView.setRootIndex(self.file_model.index(self.current_path))
+        self.listView.setRootIndex(self.file_model.index(self.current_path["path"]))
         self.listView.doubleClicked.connect(self.open_file)
 
         self.listView.setDragEnabled(True)
@@ -103,7 +104,7 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
         print(f"Opening file: {index.data()}")
 
         item_text = index.data()
-        new_path = os.path.join(self.current_path, item_text)
+        new_path = os.path.join(self.current_path["path"], item_text)
 
         if os.path.isfile(new_path):
             if sys.platform == "win32":
@@ -113,22 +114,22 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
                 subprocess.call([opener, new_path])
         else:
             self.listView.setRootIndex(self.file_model.index(new_path))
-            self.current_path = new_path
+            self.current_path["path"] = new_path
 
     def go_folder_up(self):
-        self.current_path = os.path.dirname(self.current_path)
-        self.listView.setRootIndex(self.file_model.index(self.current_path))
+        self.current_path["path"] = os.path.dirname(self.current_path["path"])
+        self.listView.setRootIndex(self.file_model.index(self.current_path["path"]))
 
     def open_new_file_dialog(self):
-        dialog = NewFileDialog(self.current_path, self)
+        dialog = NewFileDialog(self.current_path["path"], self)
         dialog.exec()
 
     def open_new_folder_dialog(self):
-        dialog = NewFolderDialog(self.current_path, self)
+        dialog = NewFolderDialog(self.current_path["path"], self)
         dialog.exec()
 
     def copy_items(self):
-        self.clipboard_items = [os.path.join(self.current_path, index.data()) for index in self.listView.selectedIndexes()]
+        self.clipboard_items = [os.path.join(self.current_path["path"], index.data()) for index in self.listView.selectedIndexes()]
 
     def cut_items(self):
         self.copy_items()
@@ -137,19 +138,19 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
     def paste_items(self):
         if self.was_cut_selected:
             for path in self.clipboard_items:
-                shutil.move(path, self.current_path)
+                shutil.move(path, self.current_path["path"])
             self.was_cut_selected = False
         else:
             for path in self.clipboard_items:
                 # Only copies files
                 if os.path.isfile(path):
-                    shutil.copy(path, self.current_path)
+                    shutil.copy(path, self.current_path["path"])
 
         self.clipboard_items = []
 
     def delete_items(self):
         for item in self.listView.selectedIndexes():
-            new_path = os.path.join(self.current_path, item.data())
+            new_path = os.path.join(self.current_path["path"], item.data())
             if os.path.isfile(new_path):
                 os.remove(new_path)
             elif os.path.isdir(new_path):
@@ -176,9 +177,12 @@ class ColorDelegate(QStyledItemDelegate):
         self.special_item_index = index
 
     def paint(self, painter, option, index):
-        full_path = os.path.join(self.current_path, index.data())
+        full_path = os.path.join(self.current_path["path"], index.data())
 
         if full_path in self.file_states:
+            print(self.current_path["path"])
+            print(index.data())
+            print(full_path)
             painter.save()
             painter.fillRect(option.rect, self.color_tags[self.file_states[full_path]][1])
             painter.setPen(self.color_tags[self.file_states[full_path]][2])
@@ -198,7 +202,7 @@ class ColorDelegate(QStyledItemDelegate):
         return None
 
     def update_index_value(self, index):
-        full_path = os.path.join(self.current_path, index.data())
+        full_path = os.path.join(self.current_path["path"], index.data())
         if full_path not in self.file_states:
             self.file_states[full_path] = 1
         else:
