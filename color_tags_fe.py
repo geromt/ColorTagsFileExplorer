@@ -6,12 +6,12 @@ import shutil
 import subprocess
 import sys
 
-from PyQt5.QtCore import Qt, QItemSelectionModel, QRect
+from PyQt5.QtCore import Qt, QItemSelectionModel
 from PyQt5.QtGui import QColor, QContextMenuEvent
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QListView, QStyledItemDelegate
 
 from main_window_ui import Ui_MainWindow
-from dialogs import *
+from dialogs import EditTagsDialog, NewColorTagDialog, NewFileDialog, NewFolderDialog
 
 META_FILE = "meta.json"
 

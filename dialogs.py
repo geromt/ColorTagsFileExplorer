@@ -1,7 +1,8 @@
 import os
 
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette, QStandardItemModel, QStandardItem
-from PyQt5.QtWidgets import QDialog, QColorDialog
+from PyQt5.QtWidgets import QDialog, QColorDialog, QStyledItemDelegate, QStyle
 from PyQt5.uic import loadUi
 
 from edit_tags_ui import Ui_EditTagsDialog
@@ -81,6 +82,9 @@ class EditTagsDialog(QDialog, Ui_EditTagsDialog):
 
         self.listView.setModel(self.model)
 
+        delegate = ItemColorDelegate(self.color_tags, self)
+        self.listView.setItemDelegate(delegate)
+
         self.editTagButton.clicked.connect(self.edit_tag)
         self.deleteButton.clicked.connect(self.delete_tag)
         self.moveUpButton.clicked.connect(self.move_up)
@@ -115,7 +119,7 @@ class EditTagsDialog(QDialog, Ui_EditTagsDialog):
         print(f"Move up item: {self.listView.selectedIndexes()[0].data()}")
         index, _ = self.listView.selectedIndexes()[0].data().split(": ")
         index = int(index)
-        if index > 0:
+        if index > 1:
             self.color_tags[index], self.color_tags[index - 1] = self.color_tags[index - 1], self.color_tags[index]
             for k, v in self.file_states.items():
                 if v == index:
@@ -133,15 +137,13 @@ class EditTagsDialog(QDialog, Ui_EditTagsDialog):
         print(f"Move down item: {self.listView.selectedIndexes()[0].data()}")
         index, _ = self.listView.selectedIndexes()[0].data().split(": ")
         index = int(index)
-        if index > len(self.color_tags):
+        if index < len(self.color_tags):
             self.color_tags[index], self.color_tags[index + 1] = self.color_tags[index + 1], self.color_tags[index]
-            if index > 0:
-                self.color_tags[index], self.color_tags[index - 1] = self.color_tags[index - 1], self.color_tags[index]
-                for k, v in self.file_states.items():
-                    if v == index:
-                        self.file_states[k] += 1
-                    elif v == index - 1:
-                        self.file_states[k] -= 1
+            for k, v in self.file_states.items():
+                if v == index:
+                    self.file_states[k] += 1
+                elif v == index + 1:
+                    self.file_states[k] -= 1
 
         self.model.clear()
         self.append_items_to_model()
@@ -152,3 +154,23 @@ class EditTagsDialog(QDialog, Ui_EditTagsDialog):
                 continue
             item = QStandardItem(f"{k}: {v[0]}")
             self.model.appendRow(item)
+
+
+class ItemColorDelegate(QStyledItemDelegate):
+    def __init__(self, color_tags, parent=None):
+        super().__init__(parent)
+        self.color_tags = color_tags
+
+    def paint(self, painter, option, index):
+        painter.save()
+        i, _ = index.data().split(": ")
+        i = int(i)
+        if option.state & QStyle.State_Selected:
+            painter.fillRect(option.rect, Qt.darkBlue)
+            painter.setPen(Qt.white)
+        else:
+            painter.fillRect(option.rect, self.color_tags[i][1])
+            painter.setPen(self.color_tags[i][2])
+
+        painter.drawText(option.rect, Qt.AlignLeft | Qt.AlignVCenter, index.data())
+        painter.restore()
