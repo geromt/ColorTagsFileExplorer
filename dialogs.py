@@ -148,5 +148,7 @@ class EditTagsDialog(QDialog, Ui_EditTagsDialog):
 
     def append_items_to_model(self):
         for k, v in enumerate(self.color_tags):
+            if k == 0:
+                continue
             item = QStandardItem(f"{k}: {v[0]}")
             self.model.appendRow(item)
