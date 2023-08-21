@@ -83,6 +83,8 @@ class EditTagsDialog(QDialog, Ui_EditTagsDialog):
 
         self.editTagButton.clicked.connect(self.edit_tag)
         self.deleteButton.clicked.connect(self.delete_tag)
+        self.moveUpButton.clicked.connect(self.move_up)
+        self.moveDownButton.clicked.connect(self.move_down)
 
 
     def edit_tag(self):
@@ -93,25 +95,56 @@ class EditTagsDialog(QDialog, Ui_EditTagsDialog):
             return
 
         print(f"Delete item: {self.listView.selectedIndexes()[0].data()}")
-        k, _ = self.listView.selectedIndexes()[0].data().split(": ")
-        k = int(k)
-        self.color_tags.pop(k)
+        index, _ = self.listView.selectedIndexes()[0].data().split(": ")
+        index = int(index)
+        self.color_tags.pop(index)
         items = list(self.file_states.items())
-        for k2, v in items:
-            if v == k:
-                self.file_states.pop(k2)
-            elif v > k:
-                self.file_states[k2] = v - 1
+        for k, v in items:
+            if v == index:
+                self.file_states.pop(k)
+            elif v > index:
+                self.file_states[k] = v - 1
 
         self.model.clear()
         self.append_items_to_model()
 
+    def move_up(self):
+        if len(self.listView.selectedIndexes()) == 0:
+            return
 
-    def move_up(self, index):
-        print(f"Move up item: {index.data()}")
+        print(f"Move up item: {self.listView.selectedIndexes()[0].data()}")
+        index, _ = self.listView.selectedIndexes()[0].data().split(": ")
+        index = int(index)
+        if index > 0:
+            self.color_tags[index], self.color_tags[index - 1] = self.color_tags[index - 1], self.color_tags[index]
+            for k, v in self.file_states.items():
+                if v == index:
+                    self.file_states[k] -= 1
+                elif v == index - 1:
+                    self.file_states[k] += 1
 
-    def move_down(self, index):
-        print(f"Move down item: {index.data()}")
+        self.model.clear()
+        self.append_items_to_model()
+
+    def move_down(self):
+        if len(self.listView.selectedIndexes()) == 0:
+            return
+
+        print(f"Move down item: {self.listView.selectedIndexes()[0].data()}")
+        index, _ = self.listView.selectedIndexes()[0].data().split(": ")
+        index = int(index)
+        if index > len(self.color_tags):
+            self.color_tags[index], self.color_tags[index + 1] = self.color_tags[index + 1], self.color_tags[index]
+            if index > 0:
+                self.color_tags[index], self.color_tags[index - 1] = self.color_tags[index - 1], self.color_tags[index]
+                for k, v in self.file_states.items():
+                    if v == index:
+                        self.file_states[k] += 1
+                    elif v == index - 1:
+                        self.file_states[k] -= 1
+
+        self.model.clear()
+        self.append_items_to_model()
 
     def append_items_to_model(self):
         for k, v in enumerate(self.color_tags):
