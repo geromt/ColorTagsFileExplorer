@@ -42,6 +42,11 @@ class Ui_EditTagsDialog(object):
         icon = QtGui.QIcon.fromTheme("edit")
         self.editTagButton.setIcon(icon)
         self.editTagButton.setObjectName("editTagButton")
+        self.deleteButton = QtWidgets.QPushButton(EditTagsDialog)
+        self.deleteButton.setGeometry(QtCore.QRect(110, 330, 89, 25))
+        icon = QtGui.QIcon.fromTheme("edit-delete")
+        self.deleteButton.setIcon(icon)
+        self.deleteButton.setObjectName("deleteButton")
 
         self.retranslateUi(EditTagsDialog)
         self.buttonBox.accepted.connect(EditTagsDialog.accept) # type: ignore
@@ -52,3 +57,4 @@ class Ui_EditTagsDialog(object):
         _translate = QtCore.QCoreApplication.translate
         EditTagsDialog.setWindowTitle(_translate("EditTagsDialog", "Edit Tags"))
         self.editTagButton.setText(_translate("EditTagsDialog", "Edit"))
+        self.deleteButton.setText(_translate("EditTagsDialog", "Delete"))

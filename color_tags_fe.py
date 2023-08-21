@@ -26,18 +26,18 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
         print(self.current_path["path"])
 
         self.file_states = {}
-        self.color_tags = {}
+        self.color_tags = []
         if os.path.exists(META_FILE):
             with open(META_FILE, "r") as f:
                 meta_data = json.loads(f.read())
                 self.file_states = meta_data["file-states"]
                 tags_data = meta_data["color-tags"]
-                for k, v in tags_data.items():
-                    self.color_tags[int(k)] = (v[0], QColor(v[1]), QColor(v[2]))
+                for v in tags_data:
+                    self.color_tags.append((v[0], QColor(v[1]), QColor(v[2])))
         else:
-            self.color_tags = {0: ("normal tag", QColor(Qt.white), QColor(Qt.black)),
-                               1: ("special tag", QColor(Qt.yellow), QColor(Qt.black)),
-                               2: ("urgent tag", QColor(Qt.red), QColor(Qt.white))}
+            self.color_tags = [("normal tag", QColor(Qt.white), QColor(Qt.black)),
+                               ("special tag", QColor(Qt.yellow), QColor(Qt.black)),
+                               ("urgent tag", QColor(Qt.red), QColor(Qt.white))]
 
         self.setWindowTitle("Color Tag File Explorer")
         self.setGeometry(100, 100, 800, 600)
@@ -91,9 +91,9 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
         print("Close button or Alt+F4 was pressed.")
 
         with open(META_FILE, "w") as f:
-            serializable_tags = {}
-            for k, v in self.color_tags.items():
-                serializable_tags[k] = (v[0], v[1].name(), v[2].name())
+            serializable_tags = []
+            for v in self.color_tags:
+                serializable_tags.append((v[0], v[1].name(), v[2].name()))
 
             data = {"file-states": self.file_states,
                     "color-tags": serializable_tags}
@@ -162,7 +162,7 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
         dialog.exec()
 
     def open_edit_tags_dialog(self):
-        dialog = EditTagsDialog(self.color_tags, self)
+        dialog = EditTagsDialog(self.color_tags, self.file_states, self)
         dialog.exec()
 
 

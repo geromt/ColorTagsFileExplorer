@@ -96,7 +96,7 @@
      <normaloff>.</normaloff>.</iconset>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton">
+  <widget class="QPushButton" name="deleteButton">
    <property name="geometry">
     <rect>
      <x>110</x>
