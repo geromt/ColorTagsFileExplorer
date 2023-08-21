@@ -48,7 +48,8 @@
     <string/>
    </property>
    <property name="icon">
-    <iconset theme="go-up"/>
+    <iconset theme="go-up">
+     <normaloff>.</normaloff>.</iconset>
    </property>
   </widget>
   <widget class="QListView" name="listView">
@@ -74,7 +75,8 @@
     <string/>
    </property>
    <property name="icon">
-    <iconset theme="go-down"/>
+    <iconset theme="go-down">
+     <normaloff>.</normaloff>.</iconset>
    </property>
   </widget>
   <widget class="QPushButton" name="editTagButton">
@@ -90,7 +92,24 @@
     <string>Edit</string>
    </property>
    <property name="icon">
-    <iconset theme="edit"/>
+    <iconset theme="edit">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton">
+   <property name="geometry">
+    <rect>
+     <x>110</x>
+     <y>330</y>
+     <width>89</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Delete</string>
+   </property>
+   <property name="icon">
+    <iconset theme="edit-delete"/>
    </property>
   </widget>
  </widget>
