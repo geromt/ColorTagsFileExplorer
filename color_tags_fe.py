@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import sys
 
+from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt, QItemSelectionModel
 from PyQt5.QtGui import QColor, QContextMenuEvent
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QListView, QStyledItemDelegate
@@ -94,8 +95,12 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
     def refresh_filter_menu(self):
         self.menuFilter.clear()
         for k, v in enumerate(self.color_tags):
-            action = self.menuFilter.addAction(v[0])
+            action = QtWidgets.QWidgetAction(self.menuFilter)
             action.triggered.connect(lambda _, i=k: self.filter_tag(i))
+            label = QtWidgets.QLabel(v[0])
+            label.setStyleSheet(f"QLabel {{ background-color: {v[1].name()}; color: {v[2].name()}; padding: 5px}}")
+            action.setDefaultWidget(label)
+            self.menuFilter.addAction(action)
 
     def closeEvent(self, event):
         print("Close button or Alt+F4 was pressed.")
@@ -126,10 +131,12 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
         else:
             self.listView.setRootIndex(self.file_model.index(new_path))
             self.current_path["path"] = new_path
+            self.last_filter = -1
 
     def go_folder_up(self):
         self.current_path["path"] = os.path.dirname(self.current_path["path"])
         self.listView.setRootIndex(self.file_model.index(self.current_path["path"]))
+        self.last_filter = -1
 
     def open_new_file_dialog(self):
         dialog = NewFileDialog(self.current_path["path"], self)
