@@ -48,6 +48,8 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
         self.clipboard_items = []
         self.was_cut_selected = False
 
+        self.last_filter = -1
+
         self.init_ui()
 
     def init_ui(self):
@@ -61,6 +63,8 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
         self.actionPaste.triggered.connect(self.paste_items)
         self.actionDelete.triggered.connect(self.delete_items)
         self.actionSelect_All.triggered.connect(self.listView.selectAll)
+
+        self.refresh_filter_menu()
 
         self.actionAdd_new_tag.triggered.connect(self.open_new_color_tag_dialog)
         self.actionEdit_tag.triggered.connect(self.open_edit_tags_dialog)
@@ -86,6 +90,12 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
                                  self.file_states,
                                  self.color_tags)
         self.listView.setItemDelegate(delegate)
+
+    def refresh_filter_menu(self):
+        self.menuFilter.clear()
+        for k, v in enumerate(self.color_tags):
+            action = self.menuFilter.addAction(v[0])
+            action.triggered.connect(lambda _, i=k: self.filter_tag(i))
 
     def closeEvent(self, event):
         print("Close button or Alt+F4 was pressed.")
@@ -160,10 +170,30 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
     def open_new_color_tag_dialog(self):
         dialog = NewColorTagDialog(self.color_tags, self)
         dialog.exec()
+        self.refresh_filter_menu()
 
     def open_edit_tags_dialog(self):
         dialog = EditTagsDialog(self.color_tags, self.file_states, self)
         dialog.exec()
+        self.refresh_filter_menu()
+
+    def filter_tag(self, index):
+        print(f"Filter index: {index}")
+
+        for file in os.listdir(self.current_path["path"]):
+            path = os.path.join(self.current_path["path"], file)
+            file_id = self.file_model.index(path)
+            if self.last_filter == index:
+                self.listView.setRowHidden(file_id.row(), False)
+                continue
+
+            if (path not in self.file_states and index != 0) or (path in self.file_states and self.file_states[path] != index):
+                self.listView.setRowHidden(file_id.row(), True)
+                print(f"Oculta {path} row {file_id.row()}")
+            else:
+                self.listView.setRowHidden(file_id.row(), False)
+
+        self.last_filter = index
 
 
 class ColorDelegate(QStyledItemDelegate):
