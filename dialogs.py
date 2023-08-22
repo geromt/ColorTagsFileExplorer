@@ -69,6 +69,44 @@ class NewColorTagDialog(QDialog):
                                 palette.color(QPalette.Text)))
 
 
+class EditColorTagDialog(QDialog):
+    def __init__(self, color_tags, index, parent=None):
+        super().__init__(parent)
+        loadUi("ui/new-color-tag.ui", self)
+
+        self.color_tags = color_tags
+        self.index = index
+
+        self.tagNameLineEdit.setText(self.color_tags[index][0])
+        new_palette = self.exampleColors.palette()
+        new_palette.setColor(QPalette.Base, self.color_tags[index][1])
+        new_palette.setColor(QPalette.Text, self.color_tags[index][2])
+        self.exampleColors.setPalette(new_palette)
+
+        self.BaseColorButton.clicked.connect(self.base_color_picker)
+        self.FontColorButton.clicked.connect(self.font_color_picker)
+
+        self.buttonBox.accepted.connect(self.edit_color_tag)
+
+    def base_color_picker(self):
+        color = QColorDialog.getColor()
+        new_palette = self.exampleColors.palette()
+        new_palette.setColor(QPalette.Base, color)
+        self.exampleColors.setPalette(new_palette)
+
+    def font_color_picker(self):
+        color = QColorDialog.getColor()
+        new_palette = self.exampleColors.palette()
+        new_palette.setColor(QPalette.Text, color)
+        self.exampleColors.setPalette(new_palette)
+
+    def edit_color_tag(self):
+        palette = self.exampleColors.palette()
+        self.color_tags[self.index] = (self.tagNameLineEdit.text(),
+                                       palette.color(QPalette.Base),
+                                       palette.color(QPalette.Text))
+
+
 class EditTagsDialog(QDialog, Ui_EditTagsDialog):
     def __init__(self, color_tags, file_states, parent=None):
         super().__init__(parent)
@@ -90,9 +128,15 @@ class EditTagsDialog(QDialog, Ui_EditTagsDialog):
         self.moveUpButton.clicked.connect(self.move_up)
         self.moveDownButton.clicked.connect(self.move_down)
 
-
     def edit_tag(self):
-        print(f"Data: {self.listView.selectedIndexes()[0].data()}")
+        if len(self.listView.selectedIndexes()) == 0:
+            return
+
+        print(f"Edit tag: {self.listView.selectedIndexes()[0].data()}")
+        index, _ = self.listView.selectedIndexes()[0].data().split(": ")
+        index = int(index)
+        dialog = EditColorTagDialog(self.color_tags, index, self)
+        dialog.exec()
 
     def delete_tag(self, index):
         if len(self.listView.selectedIndexes()) == 0:
