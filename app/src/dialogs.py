@@ -142,7 +142,7 @@ class EditTagsDialog(QDialog, Ui_EditTagsDialog):
         if len(self.listView.selectedIndexes()) == 0:
             return
 
-        print(f"Delete item: {self.listView.selectedIndexes()[0].data()}")
+        print(f"Delete tag: {self.listView.selectedIndexes()[0].data()}")
         index, _ = self.listView.selectedIndexes()[0].data().split(": ")
         index = int(index)
         self.color_tags.pop(index)
