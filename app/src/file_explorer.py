@@ -14,15 +14,23 @@ from app.src.dialogs import EditTagsDialog, NewColorTagDialog, NewFileDialog, Ne
 
 
 class FileExplorerApp(QMainWindow, Ui_MainWindow):
-    def __init__(self, meta_file="meta.json"):
+    """Controller of the main window"""
+
+    def __init__(self, meta_file: str = "meta.json"):
+        """
+        Init method
+
+        :param meta_file: Relative path of the metadata file
+        """
         super().__init__()
         self.setupUi(self)
         self.meta_file = meta_file
 
         # It's a dictionary so that we can modify its value and all the classes can see the current value
-        self.current_path = {"path": os.path.expanduser("~")}
-        print(self.current_path["path"])
+        self.current_path = {"path": os.path.expanduser("~")}  # Find home dir in windows and linux
+        print(f"Home directory's path: {self.current_path['path']}")
 
+        # If the metadata file exists, loads the file states and color tags, if not loads the default tags
         self.file_states = {}
         self.color_tags = []
         if os.path.exists(self.meta_file):
@@ -33,9 +41,9 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
                 for v in tags_data:
                     self.color_tags.append((v[0], QColor(v[1]), QColor(v[2])))
         else:
-            self.color_tags = [("normal tag", QColor(Qt.white), QColor(Qt.black)),
-                               ("special tag", QColor(Qt.yellow), QColor(Qt.black)),
-                               ("urgent tag", QColor(Qt.red), QColor(Qt.white))]
+            self.color_tags = [("normal tag", Qt.white, Qt.black),
+                               ("special tag", Qt.yellow, Qt.black),
+                               ("urgent tag", Qt.red, Qt.white)]
 
         self.setWindowTitle("Color Tag File Explorer")
         self.setGeometry(100, 100, 800, 600)
@@ -46,15 +54,15 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
         self.clipboard_items = []
         self.was_cut_selected = False
 
-        self.last_filter = -1
+        self.last_filter = -1  # Index of the last applied filter
 
         self.init_ui()
 
     def init_ui(self):
         self.file_model.setRootPath(self.current_path["path"])
 
-        self.actionNew_File.triggered.connect(self.open_new_file_dialog)
-        self.actionNew_Folder_2.triggered.connect(self.open_new_folder_dialog)
+        self.actionNew_File.triggered.connect(lambda: NewFileDialog(self.current_path["path"], self).exec())
+        self.actionNew_Folder_2.triggered.connect(lambda: NewFolderDialog(self.current_path["path"], self).exec())
 
         self.actionCopy.triggered.connect(self.copy_items)
         self.actionCut.triggered.connect(self.cut_items)
@@ -90,6 +98,9 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
         self.listView.setItemDelegate(delegate)
 
     def refresh_filter_menu(self):
+        """Clear the menu of filters and add all the actions again. It's called after a new tag is added of after the
+        edit-tags dialog it's closed
+        """
         self.menuFilter.clear()
         for k, v in enumerate(self.color_tags):
             action = QtWidgets.QWidgetAction(self.menuFilter)
@@ -135,16 +146,9 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
         self.listView.setRootIndex(self.file_model.index(self.current_path["path"]))
         self.last_filter = -1
 
-    def open_new_file_dialog(self):
-        dialog = NewFileDialog(self.current_path["path"], self)
-        dialog.exec()
-
-    def open_new_folder_dialog(self):
-        dialog = NewFolderDialog(self.current_path["path"], self)
-        dialog.exec()
-
     def copy_items(self):
-        self.clipboard_items = [os.path.join(self.current_path["path"], index.data()) for index in self.listView.selectedIndexes()]
+        self.clipboard_items = [os.path.join(self.current_path["path"], index.data())
+                                for index in self.listView.selectedIndexes()]
 
     def cut_items(self):
         self.copy_items()
@@ -165,11 +169,11 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
 
     def delete_items(self):
         for item in self.listView.selectedIndexes():
-            new_path = os.path.join(self.current_path["path"], item.data())
-            if os.path.isfile(new_path):
-                os.remove(new_path)
-            elif os.path.isdir(new_path):
-                os.removedirs(new_path)
+            temp_path = os.path.join(self.current_path["path"], item.data())
+            if os.path.isfile(temp_path):
+                os.remove(temp_path)
+            elif os.path.isdir(temp_path):
+                os.removedirs(temp_path)
 
     def open_new_color_tag_dialog(self):
         dialog = NewColorTagDialog(self.color_tags, self)
@@ -187,13 +191,15 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
         for file in os.listdir(self.current_path["path"]):
             path = os.path.join(self.current_path["path"], file)
             file_id = self.file_model.index(path)
+
+            # If the last filter it's equal to index, show all the items
             if self.last_filter == index:
                 self.listView.setRowHidden(file_id.row(), False)
                 continue
 
-            if (path not in self.file_states and index != 0) or (path in self.file_states and self.file_states[path] != index):
+            if ((path not in self.file_states and index != 0) or
+                    (path in self.file_states and self.file_states[path] != index)):
                 self.listView.setRowHidden(file_id.row(), True)
-                print(f"Oculta {path} row {file_id.row()}")
             else:
                 self.listView.setRowHidden(file_id.row(), False)
 
@@ -233,9 +239,6 @@ class ColorDelegate(QStyledItemDelegate):
             painter.restore()
         else:
             super().paint(painter, option, index)
-
-    def createEditor(self, parent, option, index):
-        return None
 
     def update_index_value(self, index):
         full_path = os.path.join(self.current_path["path"], index.data())

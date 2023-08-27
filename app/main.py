@@ -4,9 +4,13 @@ import sys
 
 from PyQt5.QtWidgets import QApplication
 
-from app.src.color_tags_fe import FileExplorerApp
+from app.src.file_explorer import FileExplorerApp
 
 META_FILE = "../meta.json"
+
+"""
+Entry point of the application
+"""
 
 
 def main():
