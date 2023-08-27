@@ -5,7 +5,7 @@ from PyQt5.QtGui import QPalette, QStandardItemModel, QStandardItem
 from PyQt5.QtWidgets import QDialog, QColorDialog, QStyledItemDelegate, QStyle
 from PyQt5.uic import loadUi
 
-from edit_tags_ui import Ui_EditTagsDialog
+from app.ui.edit_tags import Ui_EditTagsDialog
 
 
 class NewFileDialog(QDialog):
