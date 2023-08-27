@@ -3,3 +3,4 @@ venv/
 meta.json
 dist/
 .idea/
+todo.md
