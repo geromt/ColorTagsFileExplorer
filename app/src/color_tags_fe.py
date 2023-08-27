@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import json
 import os.path
 import shutil
@@ -9,18 +7,17 @@ import sys
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt, QItemSelectionModel
 from PyQt5.QtGui import QColor, QContextMenuEvent
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileSystemModel, QListView, QStyledItemDelegate
+from PyQt5.QtWidgets import QMainWindow, QFileSystemModel, QListView, QStyledItemDelegate
 
 from app.ui.main_window import Ui_MainWindow
-from dialogs import EditTagsDialog, NewColorTagDialog, NewFileDialog, NewFolderDialog
-
-META_FILE = "meta.json"
+from app.src.dialogs import EditTagsDialog, NewColorTagDialog, NewFileDialog, NewFolderDialog
 
 
 class FileExplorerApp(QMainWindow, Ui_MainWindow):
-    def __init__(self):
+    def __init__(self, meta_file="meta.json"):
         super().__init__()
         self.setupUi(self)
+        self.meta_file = meta_file
 
         # It's a dictionary so that we can modify its value and all the classes can see the current value
         self.current_path = {"path": os.path.expanduser("~")}
@@ -28,8 +25,8 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
 
         self.file_states = {}
         self.color_tags = []
-        if os.path.exists(META_FILE):
-            with open(META_FILE, "r") as f:
+        if os.path.exists(self.meta_file):
+            with open(self.meta_file, "r") as f:
                 meta_data = json.loads(f.read())
                 self.file_states = meta_data["file-states"]
                 tags_data = meta_data["color-tags"]
@@ -105,7 +102,7 @@ class FileExplorerApp(QMainWindow, Ui_MainWindow):
     def closeEvent(self, event):
         print("Close button or Alt+F4 was pressed.")
 
-        with open(META_FILE, "w") as f:
+        with open(self.meta_file, "w") as f:
             serializable_tags = []
             for v in self.color_tags:
                 serializable_tags.append((v[0], v[1].name(), v[2].name()))
@@ -254,14 +251,3 @@ class ColorDelegate(QStyledItemDelegate):
             self.update_index_value(index)
             return True
         return False
-
-
-def main():
-    app = QApplication(sys.argv)
-    file_explorer = FileExplorerApp()
-    file_explorer.show()
-    sys.exit(app.exec_())
-
-
-if __name__ == "__main__":
-    main()
